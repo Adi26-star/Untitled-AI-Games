@@ -7,7 +7,7 @@ canvas.height = 600;
 // Game state
 let gameWon = false;
 let currentLevel = 1;
-const totalLevels = 2;
+const totalLevels = 3;
 
 // Player object
 const player = {
@@ -43,12 +43,21 @@ const levels = [
             { x: 500, y: 450, width: 300, height: 100, color: '#8B4513' }
         ],
         goal: { x: 770, y: 400, width: 30, height: 50, color: '#4CAF50' }
+    },
+    // Level 3: Jump over lava in the middle to reach the flag on the right
+    {
+        platforms: [],
+        lava: [
+            { x: 300, y: 550, width: 200, height: 50, color: '#FF4500' }
+        ],
+        goal: { x: 750, y: 500, width: 30, height: 50, color: '#4CAF50' }
     }
 ];
 
 // Current level data
 let platforms = [];
 let goal = { x: 750, y: 500, width: 30, height: 50, color: '#4CAF50' };
+let lava = [];
 
 // Load level function
 function loadLevel(levelNumber) {
@@ -62,6 +71,7 @@ function loadLevel(levelNumber) {
     const levelData = levels[levelNumber - 1];
     platforms = levelData.platforms.map(p => ({ ...p }));
     goal = { ...levelData.goal };
+    lava = (levelData.lava || []).map(l => ({ ...l }));
     
     // Reset player position
     player.x = 50;
@@ -219,6 +229,19 @@ function update() {
             document.getElementById('gameOver').classList.remove('hidden');
         }
     }
+
+    // Check if player touched lava
+    for (let lavaBlock of lava) {
+        if (checkCollision(player, lavaBlock)) {
+            // Reset player position on lava hit
+            player.x = 50;
+            player.y = 300;
+            player.velocityX = 0;
+            player.velocityY = 0;
+            player.onGround = false;
+            break;
+        }
+    }
 }
 
 // Render game
@@ -239,6 +262,12 @@ function render() {
         ctx.strokeStyle = '#654321';
         ctx.lineWidth = 2;
         ctx.strokeRect(platform.x, platform.y, platform.width, platform.height);
+    });
+
+    // Draw lava
+    lava.forEach(lavaBlock => {
+        ctx.fillStyle = lavaBlock.color;
+        ctx.fillRect(lavaBlock.x, lavaBlock.y, lavaBlock.width, lavaBlock.height);
     });
     
     // Draw goal flag
