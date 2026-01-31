@@ -47,6 +47,10 @@ const levels = [
     // Level 3: Jump over lava in the middle to reach the flag on the right
     {
         platforms: [],
+        ground: [
+            { x: 0, y: 550, width: 300, height: 50, color: '#8B4513' },
+            { x: 500, y: 550, width: 300, height: 50, color: '#8B4513' }
+        ],
         lava: [
             { x: 300, y: 550, width: 200, height: 50, color: '#FF4500' }
         ],
@@ -58,6 +62,7 @@ const levels = [
 let platforms = [];
 let goal = { x: 750, y: 500, width: 30, height: 50, color: '#4CAF50' };
 let lava = [];
+let groundSegments = [];
 let tryAgainTimer = 0;
 
 // Load level function
@@ -73,6 +78,7 @@ function loadLevel(levelNumber) {
     platforms = levelData.platforms.map(p => ({ ...p }));
     goal = { ...levelData.goal };
     lava = (levelData.lava || []).map(l => ({ ...l }));
+    groundSegments = (levelData.ground || []).map(g => ({ ...g }));
     
     // Reset player position
     player.x = 50;
@@ -200,11 +206,29 @@ function update() {
         }
     }
     
-    // Check ground collision
-    if (player.y + player.height >= canvas.height - 50) {
-        player.y = canvas.height - 50 - player.height;
-        player.velocityY = 0;
-        player.onGround = true;
+    // Check ground collision (supports holes)
+    if (groundSegments.length > 0) {
+        let onAnyGround = false;
+        for (let ground of groundSegments) {
+            const withinX = player.x + player.width > ground.x && player.x < ground.x + ground.width;
+            const hittingTop = player.y + player.height >= ground.y && player.y < ground.y;
+            if (withinX && hittingTop) {
+                player.y = ground.y - player.height;
+                player.velocityY = 0;
+                player.onGround = true;
+                onAnyGround = true;
+                break;
+            }
+        }
+        if (!onAnyGround && player.onGround) {
+            player.onGround = false;
+        }
+    } else {
+        if (player.y + player.height >= canvas.height - 50) {
+            player.y = canvas.height - 50 - player.height;
+            player.velocityY = 0;
+            player.onGround = true;
+        }
     }
     
     // Boundary checks
@@ -257,8 +281,15 @@ function render() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     // Draw ground
-    ctx.fillStyle = '#8B4513';
-    ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+    if (groundSegments.length > 0) {
+        groundSegments.forEach(ground => {
+            ctx.fillStyle = ground.color;
+            ctx.fillRect(ground.x, ground.y, ground.width, ground.height);
+        });
+    } else {
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+    }
     
     // Draw platforms
     platforms.forEach(platform => {
