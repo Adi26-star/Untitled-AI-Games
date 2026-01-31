@@ -6,6 +6,8 @@ canvas.height = 600;
 
 // Game state
 let gameWon = false;
+let currentLevel = 1;
+const totalLevels = 2;
 
 // Player object
 const player = {
@@ -27,17 +29,51 @@ const player = {
 const gravity = 0.8;
 const friction = 0.85;
 
-// Platforms array - empty for plain level
-const platforms = [];
+// Level data
+const levels = [
+    // Level 1: Plain with flag on the right
+    {
+        platforms: [],
+        goal: { x: 750, y: 500, width: 30, height: 50, color: '#4CAF50' }
+    },
+    // Level 2: Two stair blocks with flag on the last block at the rightmost edge
+    {
+        platforms: [
+            { x: 300, y: 500, width: 200, height: 100, color: '#8B4513' },
+            { x: 500, y: 450, width: 300, height: 100, color: '#8B4513' }
+        ],
+        goal: { x: 770, y: 400, width: 30, height: 50, color: '#4CAF50' }
+    }
+];
 
-// Goal flag - positioned on the very right side at ground level
-const goal = {
-    x: 750,
-    y: 500,
-    width: 30,
-    height: 50,
-    color: '#4CAF50'
-};
+// Current level data
+let platforms = [];
+let goal = { x: 750, y: 500, width: 30, height: 50, color: '#4CAF50' };
+
+// Load level function
+function loadLevel(levelNumber) {
+    if (levelNumber > totalLevels) {
+        gameWon = true;
+        document.getElementById('gameOver').classList.remove('hidden');
+        return;
+    }
+    
+    currentLevel = levelNumber;
+    const levelData = levels[levelNumber - 1];
+    platforms = levelData.platforms.map(p => ({ ...p }));
+    goal = { ...levelData.goal };
+    
+    // Reset player position
+    player.x = 50;
+    player.y = 300;
+    player.velocityX = 0;
+    player.velocityY = 0;
+    player.onGround = false;
+    
+    // Hide win screen if showing
+    document.getElementById('gameOver').classList.add('hidden');
+    gameWon = false;
+}
 
 // Input handling
 const keys = {};
@@ -172,8 +208,16 @@ function update() {
     
     // Check if player reached the goal
     if (checkCollision(player, goal)) {
-        gameWon = true;
-        document.getElementById('gameOver').classList.remove('hidden');
+        if (currentLevel < totalLevels) {
+            // Advance to next level
+            loadLevel(currentLevel + 1);
+        } else {
+            // All levels completed
+            gameWon = true;
+            const winMessage = document.getElementById('winMessage');
+            winMessage.textContent = 'All Levels Complete!';
+            document.getElementById('gameOver').classList.remove('hidden');
+        }
     }
 }
 
@@ -222,11 +266,12 @@ function render() {
     
     // Draw instructions overlay
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillRect(10, 10, 200, 60);
+    ctx.fillRect(10, 10, 200, 80);
     ctx.fillStyle = 'white';
     ctx.font = '14px Arial';
     ctx.fillText('Arrow Keys or WASD', 20, 30);
     ctx.fillText('Reach the green flag!', 20, 50);
+    ctx.fillText(`Level ${currentLevel}/${totalLevels}`, 20, 70);
 }
 
 // Game loop
@@ -236,5 +281,6 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Start the game
+// Initialize and start the game
+loadLevel(1);
 gameLoop();
