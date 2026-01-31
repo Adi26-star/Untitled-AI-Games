@@ -27,23 +27,13 @@ const player = {
 const gravity = 0.8;
 const friction = 0.85;
 
-// Platforms array
-const platforms = [
-    { x: 0, y: 550, width: 200, height: 50, color: '#8B4513' },
-    { x: 250, y: 500, width: 150, height: 50, color: '#8B4513' },
-    { x: 450, y: 450, width: 150, height: 50, color: '#8B4513' },
-    { x: 650, y: 400, width: 150, height: 50, color: '#8B4513' },
-    { x: 200, y: 350, width: 100, height: 50, color: '#8B4513' },
-    { x: 350, y: 300, width: 100, height: 50, color: '#8B4513' },
-    { x: 500, y: 250, width: 100, height: 50, color: '#8B4513' },
-    { x: 650, y: 200, width: 100, height: 50, color: '#8B4513' },
-    { x: 750, y: 100, width: 50, height: 50, color: '#8B4513' }
-];
+// Platforms array - empty for plain level
+const platforms = [];
 
-// Goal flag
+// Goal flag - positioned on the very right side at ground level
 const goal = {
     x: 750,
-    y: 50,
+    y: 500,
     width: 30,
     height: 50,
     color: '#4CAF50'
