@@ -71,41 +71,20 @@ function checkCollision(rect1, rect2) {
            rect1.y + rect1.height > rect2.y;
 }
 
-// Check if player is on a platform
-function checkPlatformCollision() {
-    player.onGround = false;
-    
-    for (let platform of platforms) {
-        if (checkCollision(player, platform)) {
-            // Check if player is above the platform (falling onto it)
-            if (player.velocityY > 0 && player.y < platform.y) {
-                player.y = platform.y - player.height;
-                player.velocityY = 0;
-                player.onGround = true;
-            }
-            // Check if player hits platform from below
-            else if (player.velocityY < 0 && player.y + player.height > platform.y) {
-                player.y = platform.y + platform.height;
-                player.velocityY = 0;
-            }
-            // Check side collisions
-            else if (player.velocityX > 0) {
-                player.x = platform.x - player.width;
-                player.velocityX = 0;
-            }
-            else if (player.velocityX < 0) {
-                player.x = platform.x + platform.width;
-                player.velocityX = 0;
-            }
-        }
-    }
-    
-    // Ground collision
-    if (player.y + player.height >= canvas.height - 50) {
-        player.y = canvas.height - 50 - player.height;
-        player.velocityY = 0;
-        player.onGround = true;
-    }
+// Check horizontal collision with a platform
+function checkHorizontalCollision(platform) {
+    return player.x < platform.x + platform.width &&
+           player.x + player.width > platform.x &&
+           player.y < platform.y + platform.height &&
+           player.y + player.height > platform.y;
+}
+
+// Check vertical collision with a platform
+function checkVerticalCollision(platform) {
+    return player.x < platform.x + platform.width &&
+           player.x + player.width > platform.x &&
+           player.y < platform.y + platform.height &&
+           player.y + player.height > platform.y;
 }
 
 // Update game state
@@ -149,12 +128,47 @@ function update() {
     // Apply gravity
     player.velocityY += gravity;
     
-    // Update position
+    // Update X position first and check horizontal collisions
     player.x += player.velocityX;
-    player.y += player.velocityY;
+    for (let platform of platforms) {
+        if (checkHorizontalCollision(platform)) {
+            // Moving right into platform
+            if (player.velocityX > 0) {
+                player.x = platform.x - player.width;
+                player.velocityX = 0;
+            }
+            // Moving left into platform
+            else if (player.velocityX < 0) {
+                player.x = platform.x + platform.width;
+                player.velocityX = 0;
+            }
+        }
+    }
     
-    // Check collisions
-    checkPlatformCollision();
+    // Update Y position and check vertical collisions
+    player.y += player.velocityY;
+    for (let platform of platforms) {
+        if (checkVerticalCollision(platform)) {
+            // Falling onto platform from above
+            if (player.velocityY > 0 && player.y < platform.y) {
+                player.y = platform.y - player.height;
+                player.velocityY = 0;
+                player.onGround = true;
+            }
+            // Hitting platform from below
+            else if (player.velocityY < 0 && player.y + player.height > platform.y) {
+                player.y = platform.y + platform.height;
+                player.velocityY = 0;
+            }
+        }
+    }
+    
+    // Check ground collision
+    if (player.y + player.height >= canvas.height - 50) {
+        player.y = canvas.height - 50 - player.height;
+        player.velocityY = 0;
+        player.onGround = true;
+    }
     
     // Boundary checks
     if (player.x < 0) {
