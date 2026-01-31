@@ -58,6 +58,7 @@ const levels = [
 let platforms = [];
 let goal = { x: 750, y: 500, width: 30, height: 50, color: '#4CAF50' };
 let lava = [];
+let tryAgainTimer = 0;
 
 // Load level function
 function loadLevel(levelNumber) {
@@ -233,14 +234,19 @@ function update() {
     // Check if player touched lava
     for (let lavaBlock of lava) {
         if (checkCollision(player, lavaBlock)) {
-            // Reset player position on lava hit
+            // Send player back to start and show try again message
             player.x = 50;
             player.y = 300;
             player.velocityX = 0;
             player.velocityY = 0;
             player.onGround = false;
+            tryAgainTimer = 90;
             break;
         }
+    }
+
+    if (tryAgainTimer > 0) {
+        tryAgainTimer -= 1;
     }
 }
 
@@ -301,6 +307,14 @@ function render() {
     ctx.fillText('Arrow Keys or WASD', 20, 30);
     ctx.fillText('Reach the green flag!', 20, 50);
     ctx.fillText(`Level ${currentLevel}/${totalLevels}`, 20, 70);
+
+    if (tryAgainTimer > 0) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(290, 230, 220, 60);
+        ctx.fillStyle = 'white';
+        ctx.font = '20px Arial';
+        ctx.fillText('Try again!', 350, 268);
+    }
 }
 
 // Game loop
