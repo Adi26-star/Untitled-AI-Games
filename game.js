@@ -15,7 +15,9 @@ const player = {
     height: 40,
     velocityX: 0,
     velocityY: 0,
-    speed: 5,
+    maxSpeed: 8,
+    acceleration: 0.5,
+    deceleration: 0.3,
     jumpPower: 15,
     onGround: false,
     color: '#FF6B6B'
@@ -23,7 +25,7 @@ const player = {
 
 // Physics constants
 const gravity = 0.8;
-const friction = 0.9;
+const friction = 0.85;
 
 // Platforms array
 const platforms = [
@@ -110,13 +112,32 @@ function checkPlatformCollision() {
 function update() {
     if (gameWon) return;
     
-    // Handle input
+    // Handle input with acceleration
     if (keys['ArrowLeft'] || keys['a'] || keys['A']) {
-        player.velocityX = -player.speed;
+        // Accelerate left
+        player.velocityX -= player.acceleration;
+        if (player.velocityX < -player.maxSpeed) {
+            player.velocityX = -player.maxSpeed;
+        }
     } else if (keys['ArrowRight'] || keys['d'] || keys['D']) {
-        player.velocityX = player.speed;
+        // Accelerate right
+        player.velocityX += player.acceleration;
+        if (player.velocityX > player.maxSpeed) {
+            player.velocityX = player.maxSpeed;
+        }
     } else {
-        player.velocityX *= friction;
+        // Decelerate when no input
+        if (player.velocityX > 0) {
+            player.velocityX -= player.deceleration;
+            if (player.velocityX < 0) player.velocityX = 0;
+        } else if (player.velocityX < 0) {
+            player.velocityX += player.deceleration;
+            if (player.velocityX > 0) player.velocityX = 0;
+        }
+        // Apply friction when on ground
+        if (player.onGround) {
+            player.velocityX *= friction;
+        }
     }
     
     // Jumping
@@ -136,8 +157,14 @@ function update() {
     checkPlatformCollision();
     
     // Boundary checks
-    if (player.x < 0) player.x = 0;
-    if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+    if (player.x < 0) {
+        player.x = 0;
+        player.velocityX = 0;
+    }
+    if (player.x + player.width > canvas.width) {
+        player.x = canvas.width - player.width;
+        player.velocityX = 0;
+    }
     
     // Check if player reached the goal
     if (checkCollision(player, goal)) {
